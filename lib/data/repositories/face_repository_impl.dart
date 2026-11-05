@@ -1,11 +1,15 @@
 /// Face repository implementation
 
+import 'dart:typed_data';
+
+import 'package:image/image.dart' as img;
+
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/utils/encryption_util.dart';
 import '../../../../domain/entities/face_embedding.dart';
 import '../../../../domain/repositories/face_repository.dart';
-import '../datasources/local/user_local_datasource.dart';
-import '../datasources/remote/firestore_remote_datasource.dart';
+import '../../datasources/local/user_local_datasource.dart';
+import '../../datasources/remote/firestore_remote_datasource.dart';
 
 class FaceRepositoryImpl implements FaceRepository {
   FaceRepositoryImpl._();
@@ -19,16 +23,17 @@ class FaceRepositoryImpl implements FaceRepository {
   Future<void> registerFace({
     required String userId,
     required List<double> embedding,
-    required String faceImageUrl,
+    required String faceImageBase64,
   }) async {
-    // Save locally first (encrypted)
+    // Save locally first (encrypted embedding)
     await _local.saveFaceEmbedding(userId: userId, embedding: embedding);
 
-    // Save to remote (Firestore)
+    // Save to remote (Firestore) - faceImageBase64 stored directly
     final encrypted = EncryptionUtil.encryptEmbedding(embedding);
     await _remote.saveFaceEmbeddingToFirestore(
       userId: userId,
       encryptedVector: encrypted,
+      faceImageBase64: faceImageBase64,
     );
   }
 
@@ -56,7 +61,11 @@ class FaceRepositoryImpl implements FaceRepository {
     try {
       await _remote.updateUserProfile(
         userId: userId,
-        data: {'faceVerified': false, 'updatedAt': DateTime.now().toIso8601String()},
+        data: {
+          'faceVerified': false,
+          'faceImageBase64': null,
+          'updatedAt': DateTime.now().toIso8601String(),
+        },
       );
     } catch (e) {
       throw StorageException(message: 'Failed to delete face data remotely: $e');
@@ -66,6 +75,30 @@ class FaceRepositoryImpl implements FaceRepository {
   @override
   Future<bool> hasFaceRegistered(String userId) async {
     return await _local.hasFaceEmbedding(userId);
+  }
+
+  /// Kompress image untuk mengurangi ukuran sebelum disimpan ke Firestore
+  static Future<String> compressAndEncodeImage(Uint8List imageBytes,
+      {int maxWidth = 600, int maxHeight = 600, int quality = 75}) async {
+    final image = img.decodeImage(imageBytes);
+    if (image == null) {
+      throw AppException(message: 'Gagal memproses image.');
+    }
+
+    // Resize if too large
+    if (image.width > maxWidth || image.height > maxHeight) {
+      final resized = img.copyResize(
+        image,
+        width: maxWidth,
+        height: maxHeight,
+        maintainAspect: true,
+      );
+      final compressed = img.encodeJpg(resized, quality: quality);
+      return base64Encode(compressed);
+    }
+
+    final compressed = img.encodeJpg(image, quality: quality);
+    return base64Encode(compressed);
   }
 
   double _cosineSimilarity(List<double> a, List<double> b) {
@@ -81,4 +114,12 @@ class FaceRepositoryImpl implements FaceRepository {
     if (normA == 0.0 || normB == 0.0) return 0.0;
     return dotProduct / (normA * normB);
   }
+}
+
+/// Placeholder for StorageException (kept for compatibility)
+class StorageException implements Exception {
+  final String message;
+  StorageException({required this.message});
+  @override
+  String toString() => message;
 }

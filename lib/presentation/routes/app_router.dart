@@ -2,6 +2,7 @@
 
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -15,6 +16,13 @@ import '../screens/home/home_screen.dart';
 import '../screens/organization/org_selection_screen.dart';
 import '../screens/profile/profile_screen.dart';
 import '../screens/admin/admin_dashboard_screen.dart';
+import '../screens/admin/attendance_approval_screen.dart';
+import '../screens/admin/member_management_screen.dart';
+import '../screens/admin/reports_screen.dart';
+import '../screens/admin/settings_screen.dart';
+import '../screens/admin/shift_management_screen.dart';
+import '../screens/leave/leave_request_screen.dart';
+import '../screens/overtime/overtime_request_screen.dart';
 import '../screens/attendance/attend_screen.dart';
 
 class AppRouter {
@@ -89,12 +97,41 @@ class AppRouter {
           path: '/admin',
           builder: (context, state) => const AdminDashboardScreen(),
         ),
+        GoRoute(
+          path: '/admin/shift',
+          builder: (context, state) => const ShiftManagementScreen(),
+        ),
+        GoRoute(
+          path: '/admin/members',
+          builder: (context, state) => const MemberManagementScreen(),
+        ),
+        GoRoute(
+          path: '/admin/attendance-approval',
+          builder: (context, state) => const AttendanceApprovalScreen(),
+        ),
+        GoRoute(
+          path: '/admin/reports',
+          builder: (context, state) => const ReportsScreen(),
+        ),
+        GoRoute(
+          path: '/admin/settings',
+          builder: (context, state) => const SettingsScreen(),
+        ),
+        GoRoute(
+          path: '/leave-request',
+          builder: (context, state) => const LeaveRequestScreen(),
+        ),
+        GoRoute(
+          path: '/overtime-request',
+          builder: (context, state) => const OvertimeRequestScreen(),
+        ),
       ],
     );
   }
 }
 
 /// Placeholder face registration screen - uses camera + ML Kit
+/// Stores face image as base64 in Firestore (no Firebase Storage)
 class FaceRegistrationScreen extends StatefulWidget {
   const FaceRegistrationScreen({super.key});
 
@@ -116,7 +153,7 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen> {
     'Atas (Up)',
     'Bawah (Down)',
   ];
-  final List<File> _capturedImages = [];
+  final List<Uint8List> _capturedImageBytes = [];
   final List<List<double>> _embeddings = [];
   bool _isProcessing = false;
   bool _registrationComplete = false;
@@ -176,10 +213,21 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen> {
 
     try {
       final xFile = await _cameraController!.takePicture();
-      final file = File(xFile.path);
+      final bytes = await xFile.readAsBytes();
 
       // Detect face in the captured image
-      final inputImage = InputImage.fromFilePath(xFile.path);
+      final inputImage = InputImage.fromBytes(
+        bytes: bytes,
+        metadata: InputImageMetadata(
+          size: Size(
+            _cameraController!.value.previewSize.width,
+            _cameraController!.value.previewSize.height,
+          ),
+          rotation: InputImageRotationValue.fromRawValue(
+            _cameraController!.description.sensorOrientation,
+          )!,
+        ),
+      );
       final faces = await _faceDetector!.processImage(inputImage);
 
       if (faces.isEmpty) {
@@ -194,8 +242,8 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen> {
         return;
       }
 
-      // Save captured image
-      _capturedImages.add(file);
+      // Save captured image bytes
+      _capturedImageBytes.add(bytes);
 
       // Extract embedding (simplified - using face detection confidence as proxy)
       final face = faces.first;
@@ -239,13 +287,19 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen> {
     try {
       final averagedEmbedding = _averageEmbeddings(_embeddings);
 
+      // Compress and encode the first captured image as base64
+      final faceImageBase64 =
+          await FaceRepositoryImpl.compressAndEncodeImage(
+        _capturedImageBytes.first,
+      );
+
       final currentUser = await ServiceLocator.authRepository.getCurrentUser();
       if (currentUser == null) throw Exception('User not authenticated');
 
       await ServiceLocator.authRepository.registerFace(
         userId: currentUser.id,
         faceEmbedding: averagedEmbedding,
-        faceImageUrl: '',
+        faceImageBase64: faceImageBase64,
       );
 
       if (mounted) {
@@ -285,7 +339,7 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -302,7 +356,7 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen> {
           Text(
             '${_angleNames[_currentAngleIndex]} (${_currentAngleIndex + 1}/${AppConstants.faceRegistrationAngles})',
             style: const TextStyle(
-              color: Color(0xFF2563EB),
+              color: AppTheme.primary,
               fontSize: 14,
               fontWeight: FontWeight.w600,
             ),
@@ -311,7 +365,7 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen> {
           LinearProgressIndicator(
             value: (_currentAngleIndex + 1) / AppConstants.faceRegistrationAngles,
             backgroundColor: Colors.white24,
-            color: const Color(0xFF2563EB),
+            color: AppTheme.primary,
           ),
         ],
       ),
@@ -330,29 +384,37 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen> {
 
     if (_registrationComplete) {
       return Scaffold(
-        backgroundColor: const Color(0xFF090D14),
+        backgroundColor: AppTheme.background,
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
-                Icons.check_circle_rounded,
-                size: 80,
-                color: Color(0xFF10B981),
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: AppTheme.secondaryLight,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.check_circle_rounded,
+                  size: 48,
+                  color: AppTheme.secondary,
+                ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spaceLg),
               const Text(
                 'Wajah Terdaftar!',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: AppTheme.textPrimary,
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spaceSm),
               const Text(
                 'Selamat, wajah Anda telah terdaftar untuk absensi.',
-                style: TextStyle(color: Colors.white70, fontSize: 14),
+                style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -362,29 +424,67 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen> {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFF090D14),
+      backgroundColor: AppTheme.background,
       body: Stack(
         children: [
           // Camera Preview
           CameraPreview(_cameraController!),
 
-          // Overlay - Face Guide
+          // Gradient overlay at top and bottom
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              height: 120,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withValues(alpha: 0.6),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              height: 120,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [
+                    Colors.black.withValues(alpha: 0.6),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // Face Guide Overlay
           Center(
             child: Container(
-              width: 280,
-              height: 280,
+              width: 300,
+              height: 300,
               decoration: BoxDecoration(
                 border: Border.all(
-                  color: const Color(0xFF2563EB).withValues(alpha: 0.5),
-                  width: 2,
+                  color: AppTheme.primary.withValues(alpha: 0.6),
+                  width: 3,
                 ),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(AppTheme.radiusXl),
               ),
               child: const Center(
                 child: Icon(
                   Icons.face_rounded,
                   size: 80,
-                  color: Color(0xFF2563EB),
+                  color: AppTheme.primary,
                 ),
               ),
             ),
@@ -392,35 +492,38 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen> {
 
           // Angle Guide
           Positioned(
-            top: 60,
-            left: 0,
-            right: 0,
+            top: AppTheme.spaceLg,
+            left: AppTheme.spaceLg,
+            right: AppTheme.spaceLg,
             child: _buildAngleGuide(),
           ),
 
           // Capture Button
           Positioned(
-            bottom: 80,
+            bottom: AppTheme.spaceXl,
             left: 0,
             right: 0,
             child: Center(
               child: Container(
-                width: 72,
-                height: 72,
+                width: 64,
+                height: 64,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF2563EB),
+                  color: AppTheme.primary,
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF2563EB).withValues(alpha: 0.4),
+                      color: AppTheme.primary.withValues(alpha: 0.4),
                       blurRadius: 20,
                       spreadRadius: 4,
                     ),
                   ],
                 ),
                 child: IconButton(
-                  icon: const Icon(Icons.camera_alt_rounded,
-                      color: Colors.white, size: 28),
+                  icon: const Icon(
+                    Icons.camera_alt_rounded,
+                    color: Colors.white,
+                    size: 28,
+                  ),
                   onPressed: _isCapturing ? null : _captureFace,
                 ),
               ),
@@ -430,16 +533,22 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen> {
           // Processing overlay
           if (_isProcessing)
             Container(
-              color: Colors.black.withValues(alpha: 0.7),
+              color: Colors.black.withValues(alpha: 0.6),
               child: const Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    CircularProgressIndicator(color: Colors.white),
-                    SizedBox(height: 16),
+                    CircularProgressIndicator(
+                      color: AppTheme.primary,
+                    ),
+                    SizedBox(height: AppTheme.spaceLg),
                     Text(
                       'Memproses pendaftaran wajah...',
-                      style: TextStyle(color: Colors.white),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ],
                 ),

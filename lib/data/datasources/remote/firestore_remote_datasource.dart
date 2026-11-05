@@ -736,13 +736,18 @@ class FirestoreRemoteDataSource {
   Future<void> saveFaceEmbeddingToFirestore({
     required String userId,
     required String encryptedVector,
+    String? faceImageBase64,
   }) async {
     try {
-      await _firestore.collection('users').doc(userId).update({
+      final data = {
         'faceEmbeddingEncrypted': encryptedVector,
         'faceVerified': true,
         'updatedAt': DateTime.now().toIso8601String(),
-      });
+      };
+      if (faceImageBase64 != null && faceImageBase64.isNotEmpty) {
+        data['faceImageBase64'] = faceImageBase64;
+      }
+      await _firestore.collection('users').doc(userId).update(data);
     } catch (e) {
       throw FirestoreException(message: 'Failed to save face embedding: $e');
     }

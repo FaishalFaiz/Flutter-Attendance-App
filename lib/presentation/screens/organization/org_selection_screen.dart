@@ -1,7 +1,9 @@
-/// Organization selection screen - create or join org
+/// Organization selection screen - create or join organization
 
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+
+import '../../../core/design/app_theme.dart';
+import '../../routes/app_router.dart';
 
 class OrgSelectionScreen extends StatefulWidget {
   const OrgSelectionScreen({super.key});
@@ -23,15 +25,26 @@ class _OrgSelectionScreenState extends State<OrgSelectionScreen> {
   }
 
   Future<void> _createOrg() async {
-    if (_orgNameController.text.trim().isEmpty) return;
+    if (_orgNameController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Nama organisasi wajib diisi.'),
+          backgroundColor: AppTheme.danger,
+        ),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
     try {
       await Future.delayed(const Duration(seconds: 1));
       if (!mounted) return;
+      // TODO: Connect to OrganizationRepositoryImpl.createOrganization
       context.go('/home');
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to create org: $e')),
+        SnackBar(content: Text('Gagal membuat organisasi: $e'), backgroundColor: AppTheme.danger),
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -39,15 +52,26 @@ class _OrgSelectionScreenState extends State<OrgSelectionScreen> {
   }
 
   Future<void> _joinOrg() async {
-    if (_inviteCodeController.text.trim().isEmpty) return;
+    if (_inviteCodeController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Kode undangan wajib diisi.'),
+          backgroundColor: AppTheme.danger,
+        ),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
     try {
       await Future.delayed(const Duration(seconds: 1));
       if (!mounted) return;
+      // TODO: Connect to OrganizationRepositoryImpl.joinOrganization
       context.go('/home');
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to join org: $e')),
+        SnackBar(content: Text('Gagal gabung organisasi: $e'), backgroundColor: AppTheme.danger),
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -57,140 +81,187 @@ class _OrgSelectionScreenState extends State<OrgSelectionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF090D14),
+      backgroundColor: AppTheme.background,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(AppTheme.spaceLg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 40),
+              const SizedBox(height: AppTheme.spaceLg),
               const Icon(
                 Icons.business_rounded,
                 size: 64,
-                color: Color(0xFF2563EB),
+                color: AppTheme.primary,
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spaceLg),
               const Text(
-                'Organization',
+                'Organisasi',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: AppTheme.textPrimary,
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spaceSm),
               const Text(
-                'Create or join your company',
+                'Buat atau gabung organisasi perusahaan Anda',
                 style: TextStyle(
-                  color: Colors.white70,
+                  color: AppTheme.textSecondary,
                   fontSize: 16,
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 40),
-              const Text(
-                'Create New Organization',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _orgNameController,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: Colors.white.withValues(alpha: 0.1),
-                  labelText: 'Company Name',
-                  labelStyle: const TextStyle(color: Colors.white70),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide.none,
-                  ),
-                  prefixIcon: const Icon(Icons.business_outlined,
-                      color: Color(0xFF2563EB)),
-                ),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _isLoading ? null : _createOrg,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2563EB),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-                child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
+              const SizedBox(height: AppTheme.spaceXl),
+              // Create Organization Card
+              _buildCard(
+                title: 'Buat Organisasi Baru',
+                subtitle: 'Anda akan menjadi owner organisasi',
+                icon: Icons.add_business_rounded,
+                color: AppTheme.primary,
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: _orgNameController,
+                      style: const TextStyle(color: AppTheme.textPrimary),
+                      decoration: InputDecoration(
+                        labelText: 'Nama Perusahaan',
+                        hintText: 'Contoh: PT Teknologi Maju',
+                        prefixIcon: const Icon(
+                          Icons.business_outlined,
+                          color: AppTheme.primary,
                         ),
-                      )
-                    : const Text('Create Organization'),
-              ),
-              const SizedBox(height: 40),
-              const Divider(color: Colors.white24),
-              const SizedBox(height: 40),
-              const Text(
-                'Join Existing Organization',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spaceLg),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _createOrg,
+                        child: _isLoading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text('Buat Organisasi'),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _inviteCodeController,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: Colors.white.withValues(alpha: 0.1),
-                  labelText: 'Invite Code (6 chars)',
-                  labelStyle: const TextStyle(color: Colors.white70),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide.none,
-                  ),
-                  prefixIcon: const Icon(Icons.vpn_key_outlined,
-                      color: Color(0xFF2563EB)),
-                ),
-                maxLength: 6,
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _isLoading ? null : _joinOrg,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF10B981),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-                child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
+              const SizedBox(height: AppTheme.spaceLg),
+              // Join Organization Card
+              _buildCard(
+                title: 'Gabung Organisasi',
+                subtitle: 'Masukkan kode undangan dari admin',
+                icon: Icons.login_rounded,
+                color: AppTheme.secondary,
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: _inviteCodeController,
+                      style: const TextStyle(color: AppTheme.textPrimary),
+                      decoration: InputDecoration(
+                        labelText: 'Kode Undangan (6 karakter)',
+                        hintText: 'Contoh: ABC123',
+                        prefixIcon: const Icon(
+                          Icons.vpn_key_outlined,
+                          color: AppTheme.secondary,
                         ),
-                      )
-                    : const Text('Join Organization'),
+                      ),
+                      maxLength: 6,
+                    ),
+                    const SizedBox(height: AppTheme.spaceLg),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _joinOrg,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.secondary,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text('Gabung Organisasi'),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: AppTheme.spaceXl),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCard({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    required Widget child,
+  }) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(AppTheme.spaceLg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                  ),
+                  child: Icon(icon, color: color, size: 24),
+                ),
+                const SizedBox(width: AppTheme.spaceSm),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          color: AppTheme.textPrimary,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: AppTheme.spaceXs),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          color: AppTheme.textSecondary,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+            const SizedBox(height: AppTheme.spaceLg),
+            child,
+          ],
         ),
       ),
     );

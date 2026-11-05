@@ -1,0 +1,64 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isOrgMember(orgId) {
+      return exists(/databases/$(database)/documents/organizations/$(orgId)/members/$(request.auth.uid));
+    }
+    function isOrgAdmin(orgId) {
+      return isOrgMember(orgId)
+        && get(/databases/$(database)/documents/organizations/$(orgId)/members/$(request.auth.uid)).data.role in ['owner', 'admin'];
+    }
+    function isOrgOwner(orgId) {
+      return isOrgMember(orgId)
+        && get(/databases/$(database)/documents/organizations/$(orgId)/members/$(request.auth.uid)).data.role == 'owner';
+    }
+
+    // Organizations
+    match /organizations/{orgId} {
+      allow read: if request.auth != null && isOrgMember(orgId);
+      allow create: if request.auth != null && request.resource.data.ownerId == request.auth.uid;
+      allow update: if request.auth != null && isOrgAdmin(orgId);
+      allow delete: if request.auth != null && isOrgOwner(orgId);
+    }
+
+    // Members subcollection
+    match /organizations/{orgId}/members/{userId} {
+      allow read: if request.auth != null && isOrgMember(orgId);
+      allow create: if request.auth != null && isOrgAdmin(orgId);
+      allow update: if request.auth != null && (isOrgAdmin(orgId) || userId == request.auth.uid);
+      allow delete: if request.auth != null && isOrgAdmin(orgId) && userId != request.auth.uid;
+    }
+
+    // Attendance
+    match /organizations/{orgId}/attendance/{attendanceId} {
+      allow read: if request.auth != null && isOrgMember(orgId);
+      allow create: if request.auth != null && isOrgMember(orgId) && request.resource.data.userId == request.auth.uid;
+      allow update: if request.auth != null && isOrgAdmin(orgId);
+    }
+
+    // Leave Requests
+    match /organizations/{orgId}/leaveRequests/{requestId} {
+      allow read: if request.auth != null && isOrgMember(orgId);
+      allow create: if request.auth != null && isOrgMember(orgId) && request.resource.data.userId == request.auth.uid;
+      allow update: if request.auth != null && (isOrgAdmin(orgId) || (userId == request.auth.uid && resource.data.status == 'pending'));
+    }
+
+    // Shifts
+    match /organizations/{orgId}/shifts/{shiftId} {
+      allow read: if request.auth != null && isOrgMember(orgId);
+      allow write: if request.auth != null && isOrgAdmin(orgId);
+    }
+
+    // Users (global)
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Overtime Requests
+    match /organizations/{orgId}/overtimeRequests/{requestId} {
+      allow read: if request.auth != null && isOrgMember(orgId);
+      allow create: if request.auth != null && isOrgMember(orgId) && request.resource.data.userId == request.auth.uid;
+      allow update: if request.auth != null && isOrgAdmin(orgId);
+    }
+  }
+}

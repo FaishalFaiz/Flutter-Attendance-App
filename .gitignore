@@ -35,6 +35,7 @@ migrate_working_dir/
 
 # Secrets (API key) - jangan pernah commit
 lib/config/secrets.dart
+lib/firebase_option.dart
 
 # Symbolication related
 app.*.symbols
