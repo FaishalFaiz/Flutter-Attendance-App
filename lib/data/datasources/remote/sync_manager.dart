@@ -4,6 +4,7 @@
 /// Priority queue: Attendance > Leave > Overtime > Profile
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/utils/network_util.dart';
@@ -89,8 +90,8 @@ class SyncManager {
 
   /// Listen for connectivity changes and auto-sync
   void startAutoSync(void Function(bool isSyncing) onSyncStatusChanged) {
-    NetworkUtil.connectivityStream.listen((result) async {
-      final isConnected = result != ConnectivityResult.none;
+    NetworkUtil.connectivityStream.listen((results) async {
+      final isConnected = !results.contains(ConnectivityResult.none);
       if (isConnected && !_isSyncing) {
         onSyncStatusChanged(true);
         await syncAll();

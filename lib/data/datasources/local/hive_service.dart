@@ -11,7 +11,7 @@ import '../../../domain/entities/organization.dart';
 import '../../../domain/entities/organization_member.dart';
 import '../../../domain/entities/shift.dart';
 import '../../../domain/entities/user.dart';
-import '../../constants/app_constants.dart';
+import '../../../core/constants/app_constants.dart';
 
 /// Type adapters for Hive
 class _UserAdapter extends TypeAdapter<User> {

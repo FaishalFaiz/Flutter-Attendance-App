@@ -3,6 +3,7 @@
 /// Uses AES-256 encryption via the `encrypt` package.
 /// The encryption key is derived from AppConstants.encryptionKey.
 
+import '../constants/app_constants.dart';
 import 'package:encrypt/encrypt.dart' as encrypt_lib;
 
 class EncryptionUtil {
@@ -16,7 +17,7 @@ class EncryptionUtil {
   /// Encrypt a string value (e.g., face embedding JSON)
   static String encrypt(String plainText) {
     final encrypter = encrypt_lib.Encrypter(
-      encrypt_lib.AES(_key, mode: AESMode.cbc),
+      encrypt_lib.AES(_key, mode: encrypt_lib.AESMode.cbc),
     );
     final encrypted = encrypter.encrypt(plainText, iv: _iv);
     return encrypted.base64;
@@ -25,7 +26,7 @@ class EncryptionUtil {
   /// Decrypt a base64-encoded encrypted string
   static String decrypt(String encryptedBase64) {
     final encrypter = encrypt_lib.Encrypter(
-      encrypt_lib.AES(_key, mode: AESMode.cbc),
+      encrypt_lib.AES(_key, mode: encrypt_lib.AESMode.cbc),
     );
     final decrypted = encrypter.decrypt64(encryptedBase64, iv: _iv);
     return decrypted;

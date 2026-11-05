@@ -1,7 +1,6 @@
 /// Service Locator - Dependency Injection setup
 ///
 /// Centralizes all repository instances and provides them to widgets.
-/// Uses Riverpod's container for dependency injection.
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -13,19 +12,20 @@ import '../data/repositories/leave_repository_impl.dart';
 import '../data/repositories/organization_repository_impl.dart';
 import '../data/repositories/shift_repository_impl.dart';
 import '../data/datasources/remote/sync_manager.dart';
+import 'seed_demo_data.dart';
 
 class ServiceLocator {
   ServiceLocator._();
-  static late final AuthRepositoryImpl authRepository = AuthRepositoryImpl();
-  static late final OrganizationRepositoryImpl organizationRepository =
+  static final AuthRepositoryImpl authRepository = AuthRepositoryImpl();
+  static final OrganizationRepositoryImpl organizationRepository =
       OrganizationRepositoryImpl();
-  static late final AttendanceRepositoryImpl attendanceRepository =
+  static final AttendanceRepositoryImpl attendanceRepository =
       AttendanceRepositoryImpl();
-  static late final ShiftRepositoryImpl shiftRepository = ShiftRepositoryImpl();
-  static late final LeaveRepositoryImpl leaveRepository = LeaveRepositoryImpl();
-  static late final FaceRepositoryImpl faceRepository = FaceRepositoryImpl();
-  static late final HiveService hiveService = HiveService();
-  static late final SyncManager syncManager = SyncManager();
+  static final ShiftRepositoryImpl shiftRepository = ShiftRepositoryImpl();
+  static final LeaveRepositoryImpl leaveRepository = LeaveRepositoryImpl();
+  static final FaceRepositoryImpl faceRepository = FaceRepositoryImpl();
+  static final HiveService hiveService = HiveService();
+  static final SyncManager syncManager = SyncManager();
 }
 
 final providerContainer = ProviderContainer();

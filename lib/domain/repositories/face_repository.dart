@@ -10,8 +10,8 @@ abstract class FaceRepository {
     required String faceImageUrl,
   });
 
-  /// Get face embedding for a user
-  Future<FaceEmbedding?> getFaceEmbedding(String userId);
+  /// Get face embedding vector for a user
+  Future<List<double>?> getFaceEmbeddingVector(String userId);
 
   /// Verify a live embedding against stored embedding
   Future<bool> verifyFace({

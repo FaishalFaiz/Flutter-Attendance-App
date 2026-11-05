@@ -4,8 +4,8 @@ import '../../../../core/errors/app_exception.dart';
 import '../../../../core/utils/encryption_util.dart';
 import '../../../../domain/entities/face_embedding.dart';
 import '../../../../domain/repositories/face_repository.dart';
-import '../../datasources/local/user_local_datasource.dart';
-import '../../datasources/remote/firestore_remote_datasource.dart';
+import '../datasources/local/user_local_datasource.dart';
+import '../datasources/remote/firestore_remote_datasource.dart';
 
 class FaceRepositoryImpl implements FaceRepository {
   FaceRepositoryImpl._();
@@ -33,7 +33,7 @@ class FaceRepositoryImpl implements FaceRepository {
   }
 
   @override
-  Future<List<double>?> getFaceEmbedding(String userId) async {
+  Future<List<double>?> getFaceEmbeddingVector(String userId) async {
     return await _local.getFaceEmbedding(userId);
   }
 

@@ -1,12 +1,14 @@
 /// Auth repository implementation
 
+import 'package:encrypt/encrypt.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../../../core/errors/app_exception.dart';
+import '../../../../core/utils/encryption_util.dart';
 import '../../../domain/entities/user.dart';
 import '../../../domain/repositories/auth_repository.dart';
-import '../../datasources/local/user_local_datasource.dart';
-import '../../datasources/remote/auth_remote_datasource.dart';
+import '../datasources/local/user_local_datasource.dart';
+import '../datasources/remote/auth_remote_datasource.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl._();
@@ -54,14 +56,8 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<User> signInWithGoogle() async {
-    final user = await _remote.signInWithGoogle();
-    await _local.saveCurrentUser(user);
-    await _local.saveUser(user);
-    await _secureStorage.write(
-      key: 'auth_token',
-      value: 'authenticated_${user.id}',
-    );
-    return user;
+    // Google sign-in will be implemented in Phase 2
+    throw UnimplementedError('Google sign-in not yet implemented');
   }
 
   @override
@@ -91,21 +87,16 @@ class AuthRepositoryImpl implements AuthRepository {
     // Save to local (encrypted)
     await _local.saveFaceEmbedding(userId: userId, embedding: faceEmbedding);
 
-    // Save to Firestore
-    final encrypted = EncryptionUtil.encryptEmbedding(faceEmbedding);
-    await _remote.saveFaceEmbeddingToFirestore(
-      userId: userId,
-      encryptedVector: encrypted,
-    );
-
     // Update local user
-    final currentUser = _local.getCurrentUser();
+    final currentUser = await _local.getCurrentUser();
     if (currentUser != null) {
-      await _local.saveCurrentUser(currentUser.copyWith(
+      final updatedUser = currentUser.copyWith(
         faceImageUrl: faceImageUrl,
         faceVerified: true,
         updatedAt: DateTime.now(),
-      ));
+      );
+      await _local.saveCurrentUser(updatedUser);
+      await _local.saveUser(updatedUser);
     }
   }
 

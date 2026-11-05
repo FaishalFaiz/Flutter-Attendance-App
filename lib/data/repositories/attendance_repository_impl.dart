@@ -4,8 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../domain/entities/attendance.dart';
 import '../../../domain/repositories/attendance_repository.dart';
-import '../../datasources/local/attendance_local_datasource.dart';
-import '../../datasources/remote/firestore_remote_datasource.dart';
+import '../datasources/local/attendance_local_datasource.dart';
+import '../datasources/remote/firestore_remote_datasource.dart';
 
 class AttendanceRepositoryImpl implements AttendanceRepository {
   AttendanceRepositoryImpl._();

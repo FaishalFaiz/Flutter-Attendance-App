@@ -5,8 +5,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../domain/entities/organization.dart';
 import '../../../domain/entities/organization_member.dart';
 import '../../../domain/repositories/organization_repository.dart';
-import '../../datasources/local/org_local_datasource.dart';
-import '../../datasources/remote/firestore_remote_datasource.dart';
+import '../datasources/local/org_local_datasource.dart';
+import '../datasources/remote/firestore_remote_datasource.dart';
 
 class OrganizationRepositoryImpl implements OrganizationRepository {
   OrganizationRepositoryImpl._();

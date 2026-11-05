@@ -9,7 +9,7 @@ import '../../../../domain/entities/leave_request.dart';
 import '../../../../domain/entities/organization.dart';
 import '../../../../domain/entities/organization_member.dart';
 import '../../../../domain/entities/shift.dart';
-import '../../constants/app_constants.dart';
+import '../../../core/constants/app_constants.dart';
 
 class FirestoreRemoteDataSource {
   FirestoreRemoteDataSource._();

@@ -1,23 +1,28 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:attendance_app/ui/attendance_design.dart';
-import 'package:attendance_app/ui/navigation_shell.dart';
+import 'app.dart';
+import 'di/service_locator.dart';
+import 'di/seed_demo_data.dart';
+import 'firebase_options.dart';
 
-Future<void> main() async {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const AttendanceApp());
-}
 
-class AttendanceApp extends StatelessWidget {
-  const AttendanceApp({super.key});
+  // Initialize Firebase
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Attendance App',
-      debugShowCheckedModeBanner: false,
-      theme: AttendanceTheme.light,
-      home: const MainNavigationShell(),
-    );
-  }
+  // Initialize service locator (Hive, etc.)
+  await ServiceLocator.hiveService.init();
+  await SeedDemoData.initIfEmpty();
+  await ServiceLocator.syncManager.syncAll();
+
+  runApp(
+    const ProviderScope(
+      child: App(),
+    ),
+  );
 }

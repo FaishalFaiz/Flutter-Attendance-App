@@ -6,7 +6,7 @@ import '../../../../core/errors/app_exception.dart';
 import '../../../../core/utils/encryption_util.dart';
 import '../../../../domain/entities/face_embedding.dart';
 import '../../../../domain/entities/user.dart';
-import '../../datasources/local/hive_service.dart';
+import 'hive_service.dart';
 
 class UserLocalDataSource {
   UserLocalDataSource._();

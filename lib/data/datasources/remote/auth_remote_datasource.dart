@@ -1,13 +1,11 @@
 /// Remote datasource for authentication (Firebase Auth)
 
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-import '../../../../core/errors/app_exception.dart';
-import '../../../../domain/entities/user.dart';
-import '../../constants/app_constants.dart';
+import '../../../core/constants/app_constants.dart';
+import '../../../core/errors/app_exception.dart';
+import '../../../domain/entities/user.dart' as domain_user;
 
 class AuthRemoteDataSource {
   AuthRemoteDataSource._();
@@ -16,11 +14,9 @@ class AuthRemoteDataSource {
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
-  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
   /// Convert Firebase User to domain User
-  Future<User> _toDomainUser(UserCredential credential) async {
+  Future<domain_user.User> _toDomainUser(UserCredential credential) async {
     final firebaseUser = credential.user!;
     final doc = await _firestore
         .collection('users')
@@ -28,10 +24,10 @@ class AuthRemoteDataSource {
         .get();
 
     if (doc.exists) {
-      return User.fromJson(doc.data()!);
+      return domain_user.User.fromJson(doc.data()!);
     } else {
       // Create user record in Firestore
-      final newUser = User(
+      final newUser = domain_user.User(
         id: firebaseUser.uid,
         email: firebaseUser.email ?? '',
         displayName: firebaseUser.displayName ?? firebaseUser.email?.split('@').first ?? 'User',
@@ -46,7 +42,7 @@ class AuthRemoteDataSource {
   }
 
   /// Sign in with email and password
-  Future<User> signIn({
+  Future<domain_user.User> signIn({
     required String email,
     required String password,
   }) async {
@@ -65,7 +61,7 @@ class AuthRemoteDataSource {
   }
 
   /// Sign up with email and password
-  Future<User> signUp({
+  Future<domain_user.User> signUp({
     required String email,
     required String password,
     required String displayName,
@@ -85,38 +81,9 @@ class AuthRemoteDataSource {
     }
   }
 
-  /// Sign in with Google
-  Future<User> signInWithGoogle() async {
-    try {
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) {
-        throw AuthException(message: 'Google sign-in cancelled by user.');
-      }
-
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
-
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      final userCredential = await _auth.signInWithCredential(credential);
-      return await _toDomainUser(userCredential);
-    } on FirebaseAuthException catch (e) {
-      throw AuthException(
-        message: _getAuthErrorMessage(e.code),
-        code: e.code,
-      );
-    } catch (e) {
-      throw AuthException(message: 'Google sign-in failed: $e');
-    }
-  }
-
   /// Sign out
   Future<void> signOut() async {
     try {
-      await _googleSignIn.signOut();
       await _auth.signOut();
     } catch (e) {
       throw AuthException(message: 'Failed to sign out: $e');
@@ -124,12 +91,11 @@ class AuthRemoteDataSource {
   }
 
   /// Get current authenticated user
-  User? getCurrentUser() {
+  domain_user.User? getCurrentUser() {
     final firebaseUser = _auth.currentUser;
     if (firebaseUser == null) return null;
 
-    // Return a basic user object - full data should come from Firestore
-    return User(
+    return domain_user.User(
       id: firebaseUser.uid,
       email: firebaseUser.email ?? '',
       displayName: firebaseUser.displayName ?? 'User',
@@ -141,16 +107,16 @@ class AuthRemoteDataSource {
   }
 
   /// Stream of auth state changes
-  Stream<User?> get authStateChanges {
+  Stream<domain_user.User?> get authStateChanges {
     return _auth.authStateChanges().asyncMap((firebaseUser) async {
       if (firebaseUser == null) return null;
       try {
         final doc = await _firestore.collection('users').doc(firebaseUser.uid).get();
         if (doc.exists) {
-          return User.fromJson(doc.data()!);
+          return domain_user.User.fromJson(doc.data()!);
         }
       } catch (_) {}
-      return User(
+      return domain_user.User(
         id: firebaseUser.uid,
         email: firebaseUser.email ?? '',
         displayName: firebaseUser.displayName ?? 'User',

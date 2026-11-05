@@ -10,14 +10,14 @@ class NetworkUtil {
   /// Check if device has internet connectivity
   static Future<bool> isConnected() async {
     try {
-      final result = await _connectivity.checkConnectivity();
-      return result != ConnectivityResult.none;
+      final results = await _connectivity.checkConnectivity();
+      return !results.contains(ConnectivityResult.none);
     } catch (_) {
       return false;
     }
   }
 
   /// Stream of connectivity changes
-  static Stream<ConnectivityResult> get connectivityStream =>
+  static Stream<List<ConnectivityResult>> get connectivityStream =>
       _connectivity.onConnectivityChanged;
 }

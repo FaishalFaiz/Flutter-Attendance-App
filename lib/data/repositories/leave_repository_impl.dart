@@ -1,8 +1,9 @@
 /// Leave repository implementation
 
+import '../../../core/errors/app_exception.dart';
 import '../../../domain/entities/leave_request.dart';
 import '../../../domain/repositories/leave_repository.dart';
-import '../../datasources/remote/firestore_remote_datasource.dart';
+import '../datasources/remote/firestore_remote_datasource.dart';
 
 class LeaveRepositoryImpl implements LeaveRepository {
   LeaveRepositoryImpl._();
@@ -80,7 +81,7 @@ class LeaveRepositoryImpl implements LeaveRepository {
         notes: 'Cancelled by user',
       );
     } catch (e) {
-      throw FirestoreException(message: 'Failed to cancel leave request: $e');
+      throw AppException(message: 'Failed to cancel leave request: $e');
     }
   }
 

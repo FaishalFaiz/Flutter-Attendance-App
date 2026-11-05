@@ -1,10 +1,12 @@
 /// Remote datasource for Firebase Storage operations
 
+import 'dart:typed_data';
+
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
 import '../../../../core/errors/app_exception.dart';
-import '../../constants/app_constants.dart';
+import '../../../core/constants/app_constants.dart';
 
 class StorageRemoteDataSource {
   StorageRemoteDataSource._();
@@ -17,7 +19,7 @@ class StorageRemoteDataSource {
   Future<String> uploadFaceImage({
     required String orgId,
     required String userId,
-    required List<int> imageBytes,
+    required Uint8List imageBytes,
   }) async {
     try {
       final path = AppConstants.faceImagePath(orgId, userId);
@@ -42,7 +44,7 @@ class StorageRemoteDataSource {
   /// Upload profile image for a user
   Future<String> uploadProfileImage({
     required String userId,
-    required List<int> imageBytes,
+    required Uint8List imageBytes,
   }) async {
     try {
       final path = AppConstants.profileImagePath(userId);
@@ -66,7 +68,7 @@ class StorageRemoteDataSource {
     required String orgId,
     required String requestId,
     required String fileName,
-    required List<int> fileBytes,
+    required Uint8List fileBytes,
   }) async {
     try {
       final path = '${AppConstants.leaveAttachmentPath(orgId, requestId)}$fileName';

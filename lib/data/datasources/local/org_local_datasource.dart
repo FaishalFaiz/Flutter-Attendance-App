@@ -5,7 +5,7 @@ import 'package:hive/hive.dart';
 import '../../../../core/errors/app_exception.dart';
 import '../../../../domain/entities/organization.dart';
 import '../../../../domain/entities/organization_member.dart';
-import '../../datasources/local/hive_service.dart;
+import 'hive_service.dart';
 
 class OrganizationLocalDataSource {
   OrganizationLocalDataSource._();

@@ -2,7 +2,7 @@
 
 import '../../../domain/entities/shift.dart';
 import '../../../domain/repositories/shift_repository.dart';
-import '../../datasources/remote/firestore_remote_datasource.dart';
+import '../datasources/remote/firestore_remote_datasource.dart';
 
 class ShiftRepositoryImpl implements ShiftRepository {
   ShiftRepositoryImpl._();
