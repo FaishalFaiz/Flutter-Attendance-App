@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../di/service_locator.dart';
+
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -37,14 +39,32 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // TODO: Connect to AuthRepositoryImpl.signIn
-      await Future.delayed(const Duration(seconds: 1));
+      await ServiceLocator.authRepository.signIn(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
       if (!mounted) return;
       context.go('/org-selection');
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Login failed: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _signInWithGoogle() async {
+    setState(() => _isLoading = true);
+    try {
+      await ServiceLocator.authRepository.signInWithGoogle();
+      if (!mounted) return;
+      context.go('/org-selection');
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Google sign-in failed: $e')),
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -172,9 +192,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 24),
               OutlinedButton.icon(
-                onPressed: _isLoading ? null : () {
-                  // TODO: Google sign-in
-                },
+                onPressed: _isLoading ? null : _signInWithGoogle,
                 icon: const Icon(Icons.g_mobiledata, color: Colors.white),
                 label: const Text(
                   'Continue with Google',
@@ -197,8 +215,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     style: TextStyle(color: Colors.white70),
                   ),
                   TextButton(
-                    onPressed: () =>
-                        context.push('/register'),
+                    onPressed: () => context.push('/register'),
                     child: const Text(
                       'Sign up',
                       style: TextStyle(

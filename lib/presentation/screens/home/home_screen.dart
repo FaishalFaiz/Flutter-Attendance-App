@@ -13,19 +13,21 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 
+  final List<Widget> _tabs = [
+    const _DashboardTab(),
+    const _AttendanceTab(),
+    const _HistoryTab(),
+    const _LeaveTab(),
+    const _ProfileTab(),
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF090D14),
       body: IndexedStack(
         index: _selectedIndex,
-        children: [
-          _buildHomeTab(),
-          const AttendTab(),
-          const HistoryTab(),
-          const LeaveTab(),
-          const ProfileTab(),
-        ],
+        children: _tabs,
       ),
       bottomNavigationBar: Container(
         margin: const EdgeInsets.fromLTRB(24, 0, 24, 16),
@@ -101,8 +103,13 @@ class _HomeScreenState extends State<HomeScreen> {
     (label: 'Leave', icon: Icons.description_outlined),
     (label: 'Profile', icon: Icons.person_outline_rounded),
   ];
+}
 
-  Widget _buildHomeTab() {
+class _DashboardTab extends StatelessWidget {
+  const _DashboardTab();
+
+  @override
+  Widget build(BuildContext context) {
     return const Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -119,7 +126,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           SizedBox(height: 8),
           Text(
-            'Welcome to your attendance platform',
+            'Selamat datang di platform absensi',
             style: TextStyle(color: Colors.white70, fontSize: 14),
           ),
         ],
@@ -128,38 +135,94 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class AttendTab extends StatelessWidget {
-  const AttendTab({super.key});
+class _AttendanceTab extends StatelessWidget {
+  const _AttendanceTab();
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.camera_alt_rounded, size: 64, color: Color(0xFF2563EB)),
-          SizedBox(height: 16),
-          Text(
-            'Face Attendance',
+          const Icon(Icons.camera_alt_rounded,
+              size: 64, color: Color(0xFF2563EB)),
+          const SizedBox(height: 16),
+          const Text(
+            'Absensi Wajah',
             style: TextStyle(
               color: Colors.white,
               fontSize: 24,
               fontWeight: FontWeight.bold,
             ),
           ),
-          SizedBox(height: 8),
-          Text(
-            'Scan your face to check in/out',
+          const SizedBox(height: 8),
+          const Text(
+            'Scan wajah untuk check in/out',
             style: TextStyle(color: Colors.white70, fontSize: 14),
           ),
+          const SizedBox(height: 32),
+          ...AttendanceAction.values.map((action) => Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: SizedBox(
+              width: 260,
+              height: 50,
+              child: ElevatedButton.icon(
+                onPressed: () => context.push(
+                  '/attend?action=${action.name}',
+                ),
+                icon: Icon(_getIcon(action), size: 20),
+                label: Text(_getTitle(action)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _getColor(action),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+              ),
+            ),
+          )),
         ],
       ),
     );
   }
+
+  IconData _getIcon(AttendanceAction action) {
+    switch (action) {
+      case AttendanceAction.checkIn: return Icons.login_rounded;
+      case AttendanceAction.checkOut: return Icons.logout_rounded;
+      case AttendanceAction.breakStart: return Icons.pause_rounded;
+      case AttendanceAction.breakEnd: return Icons.play_arrow_rounded;
+      case AttendanceAction.overtimeStart: return Icons.schedule_rounded;
+      case AttendanceAction.overtimeEnd: return Icons.schedule_rounded;
+    }
+  }
+
+  String _getTitle(AttendanceAction action) {
+    switch (action) {
+      case AttendanceAction.checkIn: return 'Check In';
+      case AttendanceAction.checkOut: return 'Check Out';
+      case AttendanceAction.breakStart: return 'Mulai Istirahat';
+      case AttendanceAction.breakEnd: return 'Selesai Istirahat';
+      case AttendanceAction.overtimeStart: return 'Mulai Lembur';
+      case AttendanceAction.overtimeEnd: return 'Selesai Lembur';
+    }
+  }
+
+  Color _getColor(AttendanceAction action) {
+    switch (action) {
+      case AttendanceAction.checkIn: return const Color(0xFF10B981);
+      case AttendanceAction.checkOut: return const Color(0xFFEF4444);
+      case AttendanceAction.breakStart: return const Color(0xFFF59E0B);
+      case AttendanceAction.breakEnd: return const Color(0xFFF59E0B);
+      case AttendanceAction.overtimeStart: return const Color(0xFF8B5CF6);
+      case AttendanceAction.overtimeEnd: return const Color(0xFF8B5CF6);
+    }
+  }
 }
 
-class HistoryTab extends StatelessWidget {
-  const HistoryTab({super.key});
+class _HistoryTab extends StatelessWidget {
+  const _HistoryTab();
 
   @override
   Widget build(BuildContext context) {
@@ -170,7 +233,7 @@ class HistoryTab extends StatelessWidget {
           Icon(Icons.history_rounded, size: 64, color: Color(0xFF2563EB)),
           SizedBox(height: 16),
           Text(
-            'Attendance History',
+            'Riwayat Absensi',
             style: TextStyle(
               color: Colors.white,
               fontSize: 24,
@@ -179,7 +242,7 @@ class HistoryTab extends StatelessWidget {
           ),
           SizedBox(height: 8),
           Text(
-            'View your attendance records',
+            'Lihat riwayat absensi Anda',
             style: TextStyle(color: Colors.white70, fontSize: 14),
           ),
         ],
@@ -188,8 +251,8 @@ class HistoryTab extends StatelessWidget {
   }
 }
 
-class LeaveTab extends StatelessWidget {
-  const LeaveTab({super.key});
+class _LeaveTab extends StatelessWidget {
+  const _LeaveTab();
 
   @override
   Widget build(BuildContext context) {
@@ -200,7 +263,7 @@ class LeaveTab extends StatelessWidget {
           Icon(Icons.description_outlined, size: 64, color: Color(0xFF2563EB)),
           SizedBox(height: 16),
           Text(
-            'Leave Requests',
+            'Pengajuan Cuti',
             style: TextStyle(
               color: Colors.white,
               fontSize: 24,
@@ -209,7 +272,7 @@ class LeaveTab extends StatelessWidget {
           ),
           SizedBox(height: 8),
           Text(
-            'Submit and manage leave requests',
+            'Ajukan dan kelola permintaan cuti',
             style: TextStyle(color: Colors.white70, fontSize: 14),
           ),
         ],
@@ -218,8 +281,8 @@ class LeaveTab extends StatelessWidget {
   }
 }
 
-class ProfileTab extends StatelessWidget {
-  const ProfileTab({super.key});
+class _ProfileTab extends StatelessWidget {
+  const _ProfileTab();
 
   @override
   Widget build(BuildContext context) {
@@ -227,10 +290,11 @@ class ProfileTab extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.person_outline_rounded, size: 64, color: Color(0xFF2563EB)),
+          Icon(Icons.person_outline_rounded,
+              size: 64, color: Color(0xFF2563EB)),
           SizedBox(height: 16),
           Text(
-            'Profile',
+            'Profil',
             style: TextStyle(
               color: Colors.white,
               fontSize: 24,
@@ -239,7 +303,7 @@ class ProfileTab extends StatelessWidget {
           ),
           SizedBox(height: 8),
           Text(
-            'Manage your profile and face data',
+            'Kelola profil dan data wajah',
             style: TextStyle(color: Colors.white70, fontSize: 14),
           ),
         ],

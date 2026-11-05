@@ -56,8 +56,14 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<User> signInWithGoogle() async {
-    // Google sign-in will be implemented in Phase 2
-    throw UnimplementedError('Google sign-in not yet implemented');
+    final user = await _remote.signInWithGoogle();
+    await _local.saveCurrentUser(user);
+    await _local.saveUser(user);
+    await _secureStorage.write(
+      key: 'auth_token',
+      value: 'authenticated_${user.id}',
+    );
+    return user;
   }
 
   @override

@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../di/service_locator.dart';
+
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -52,8 +54,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // TODO: Connect to AuthRepositoryImpl.signUp
-      await Future.delayed(const Duration(seconds: 1));
+      await ServiceLocator.authRepository.signUp(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        displayName: _nameController.text.trim(),
+      );
       if (!mounted) return;
       context.go('/face-registration');
     } catch (e) {
@@ -219,7 +224,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     style: TextStyle(color: Colors.white70),
                   ),
                   TextButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () => context.pop(),
                     child: const Text(
                       'Sign In',
                       style: TextStyle(

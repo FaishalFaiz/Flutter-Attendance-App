@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "633757617660",
+    "project_id": "flutter-attendance-app-fa9be",
+    "storage_bucket": "flutter-attendance-app-fa9be.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:633757617660:android:cd787d17cc32b4bc4f7679",
+        "android_client_info": {
+          "package_name": "com.example.attendance_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "633757617660-3kqp8vt7ifnt6ai4ae3gq1i7grsc8bcd.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBjdihkNIK6Y1pZSs6jIzDKRoep5ZQYj7Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "633757617660-3kqp8vt7ifnt6ai4ae3gq1i7grsc8bcd.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

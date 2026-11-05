@@ -2,6 +2,7 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/errors/app_exception.dart';
@@ -14,6 +15,9 @@ class AuthRemoteDataSource {
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    scopes: <String>['email', 'profile'],
+  );
 
   /// Convert Firebase User to domain User
   Future<domain_user.User> _toDomainUser(UserCredential credential) async {
@@ -81,9 +85,38 @@ class AuthRemoteDataSource {
     }
   }
 
+  /// Sign in with Google
+  Future<domain_user.User> signInWithGoogle() async {
+    try {
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) {
+        throw AuthException(message: 'Google sign-in cancelled by user.');
+      }
+
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final userCredential = await _auth.signInWithCredential(credential);
+      return await _toDomainUser(userCredential);
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(
+        message: _getAuthErrorMessage(e.code),
+        code: e.code,
+      );
+    } catch (e) {
+      throw AuthException(message: 'Google sign-in failed: $e');
+    }
+  }
+
   /// Sign out
   Future<void> signOut() async {
     try {
+      await _googleSignIn.signOut();
       await _auth.signOut();
     } catch (e) {
       throw AuthException(message: 'Failed to sign out: $e');
